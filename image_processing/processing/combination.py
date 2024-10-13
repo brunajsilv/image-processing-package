@@ -1,17 +1,33 @@
-import numpy as np
-from skimage.color import rgb2gray
-from skimage.exposure import match_histograms
-from skimage.metrics import structural_similarity
+from PIL import Image
 
-def find_difference(image1, image2):
-    assert image1.shape == image2.shape, "Specify 2 images with de same shape."
-    gray_image1 = rgb2gray(image1)
-    gray_image2 = rgb2gray(image2)
-    (score, difference_image) = structural_similarity(gray_image1, gray_image2, full=True)
-    print("Similarity of the images:", score)
-    normalized_difference_image = (difference_image-np.min(difference_image))/(np.max(difference_image)-np.min(difference_image))
-    return normalized_difference_image
+def combinar_imagens(imagens, caminho_saida):
+    """
+    Combina múltiplas imagens horizontalmente e salva em um arquivo.
+    
+    Args:
+    imagens (list): Lista com os caminhos das imagens a serem combinadas.
+    caminho_saida (str): Caminho para salvar a imagem combinada.
+    """
+    try:
+        # Abre todas as imagens
+        imgs = [Image.open(img) for img in imagens]
 
-def transfer_histogram(image1, image2):
-    matched_image = match_histograms(image1, image2, multichannel=True)
-    return matched_image
+        # Calcula a largura total e a altura máxima
+        largura_total = sum([img.width for img in imgs])
+        altura_maxima = max([img.height for img in imgs])
+
+        # Cria uma nova imagem com o tamanho combinado
+        imagem_combinada = Image.new('RGB', (largura_total, altura_maxima))
+
+        # Cola as imagens lado a lado
+        x_offset = 0
+        for img in imgs:
+            imagem_combinada.paste(img, (x_offset, 0))
+            x_offset += img.width
+
+        # Salva a imagem combinada
+        imagem_combinada.save(caminho_saida)
+        print(f"Imagem combinada salva com sucesso em: {caminho_saida}")
+    
+    except Exception as e:
+        print(f"Erro ao combinar as imagens: {e}")
